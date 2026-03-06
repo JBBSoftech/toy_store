@@ -11,8 +11,6 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:frontend/config/environment.dart';
-
 import 'package:frontend/utils/auth_helper.dart';
 
 
@@ -704,7 +702,7 @@ Future<void> loadDynamicProductData() async {
 
     final response = await http.get(
 
-      Uri.parse('${Environment.apiBase}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
+      Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
 
       headers: {'Content-Type': 'application/json'},
 
@@ -804,7 +802,7 @@ void startRealTimeUpdates() async {
 
   if (adminId != null) {
 
-    _appSync.connect(adminId: adminId, apiBase: Environment.apiBase);
+    _appSync.connect(adminId: adminId, apiBase: dotenv.env['API_BASE'] ?? 'http://localhost:5000');
 
     
 
@@ -967,9 +965,9 @@ class MyApp extends StatelessWidget {
 
 class ApiConfig {
 
-  static String get baseUrl => Environment.apiBase;
+  static String get baseUrl => dotenv.env['API_BASE'] ?? 'http://localhost:5000';
 
-  static const String adminObjectId = 'ADMIN_OBJECT_ID_HERE'; // Will be replaced during publish
+  static const String adminObjectId = '695f6ef0ea4dd58bb956c8cb'; // Will be replaced during publish
 
   static const String appId = 'APP_ID_HERE'; // Will be replaced during publish
 
@@ -1087,7 +1085,7 @@ class AdminManager {
 
       final response = await http.get(
 
-        Uri.parse('http://192.168.59.184:5000/api/admin/app-info'),
+        Uri.parse('http://192.168.0.9:5000/api/admin/app-info'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -1189,7 +1187,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       final response = await http.get(
 
-        Uri.parse('${Environment.apiBase}/api/admin/splash?adminId=${adminId}&appId=${ApiConfig.appId}'),
+        Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/admin/splash?adminId=${adminId}&appId=${ApiConfig.appId}'),
 
       );
 
@@ -1437,7 +1435,7 @@ class _SignInPageState extends State<SignInPage> {
 
       final response = await http.post(
 
-        Uri.parse('http://192.168.59.184:5000/api/login'),
+        Uri.parse('http://192.168.0.9:5000/api/login'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -1879,7 +1877,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
       final response = await http.post(
 
-        Uri.parse('${Environment.apiBase}/api/signup'),
+        Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/signup'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -2340,7 +2338,7 @@ class _HomePageState extends State<HomePage> {
 
       final response = await http.get(
 
-        Uri.parse('${Environment.apiBase}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
+        Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -4045,7 +4043,7 @@ class _HomePageState extends State<HomePage> {
 
       final response = await http.get(
 
-        Uri.parse('${Environment.apiBase}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
+        Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -4219,7 +4217,7 @@ class _HomePageState extends State<HomePage> {
 
       final response = await http.get(
 
-        Uri.parse('${Environment.apiBase}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
+        Uri.parse('${dotenv.env['API_BASE'] ?? 'http://localhost:5000'}/api/get-form?adminId=${adminId}&appId=${ApiConfig.appId}'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -4855,236 +4853,114 @@ class _HomePageState extends State<HomePage> {
 
                     // Add to Cart section with quantity controller
 
-                    Row(
-
-                      children: [
-
-                        // Quantity controller
-
-                        Container(
-
-                          decoration: BoxDecoration(
-
-                            border: Border.all(color: Colors.grey.shade300),
-
-                            borderRadius: BorderRadius.circular(8),
-
-                          ),
-
-                          child: Row(
-
-                            mainAxisSize: MainAxisSize.min,
-
-                            children: [
-
-                              IconButton(
-
-                                onPressed: isSoldOut ? null : () {
-
-                                  // Decrease quantity logic here
-
-                                  final currentQuantity = _cartManager.items.where((item) => item.id == productId).fold(0, (sum, item) => sum + item.quantity);
-
-                                  if (currentQuantity > 1) {
-
-                                    _cartManager.updateQuantity(productId, currentQuantity - 1);
-
-                                  } else if (currentQuantity == 1) {
-
-                                    _cartManager.removeItem(productId);
-
-                                  }
-
-                                },
-
-                                icon: const Icon(Icons.remove, size: 16),
-
-                                padding: EdgeInsets.zero,
-
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-
-                              ),
-
-                              Container(
-
-                                width: 30,
-
-                                alignment: Alignment.center,
-
-                                child: Text(
-
-                                  '${_cartManager.items.where((item) => item.id == productId).fold(0, (sum, item) => sum + item.quantity)}',
-
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-
-                                ),
-
-                              ),
-
-                              IconButton(
-
-                                onPressed: isSoldOut ? null : () {
-
-                                  // Increase quantity logic here
-
-                                  final currentQuantity = _cartManager.items.where((item) => item.id == productId).fold(0, (sum, item) => sum + item.quantity);
-
-                                  if (currentQuantity < 10) { // Max 10 items limit
-
-                                    if (currentQuantity == 0) {
-
-                                      final cartItem = CartItem(
-
-                                        id: productId,
-
-                                        name: productName,
-
-                                        price: basePrice,
-
-                                        discountPrice: hasDiscount ? effectivePrice : 0.0,
-
-                                        image: image,
-
-                                        currencySymbol: currencySymbol,
-
-                                      );
-
-                                      _cartManager.addItem(cartItem);
-
-                                    } else {
-
-                                      _cartManager.updateQuantity(productId, currentQuantity + 1);
-
-                                    }
-
-                                  }
-
-                                },
-
-                                icon: const Icon(Icons.add, size: 16),
-
-                                padding: EdgeInsets.zero,
-
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-
-                              ),
-
-                            ],
-
-                          ),
-
-                        ),
-
-                        const SizedBox(width: 8),
-
-                        // Add to Cart button
-
-                        Expanded(
-
-                          child: Container(
-
+                    Builder(
+                      builder: (context) {
+                        final currentQuantity = _cartManager.items
+                            .where((item) => item.id == productId)
+                            .fold(0, (sum, item) => sum + item.quantity);
+
+                        if (isSoldOut) {
+                          return Container(
                             height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade400),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Out of Stock',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
 
-                            child: isSoldOut
+                        if (currentQuantity <= 0) {
+                          return SizedBox(
+                            width: double.infinity,
+                            height: 32,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final cartItem = CartItem(
+                                  id: productId,
+                                  name: productName,
+                                  price: basePrice,
+                                  discountPrice: hasDiscount ? effectivePrice : 0.0,
+                                  image: image,
+                                  currencySymbol: currencySymbol,
+                                );
+                                _cartManager.addItem(cartItem);
+                                setState(() {});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Added to cart')),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Add to Cart',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          );
+                        }
 
-                                ? Container(
-
-                                    decoration: BoxDecoration(
-
-                                      color: Colors.grey.shade300,
-
-                                      borderRadius: BorderRadius.circular(8),
-
-                                      border: Border.all(color: Colors.grey.shade400),
-
-                                    ),
-
-                                    child: const Center(
-
-                                      child: Text(
-
-                                        'Out of Stock',
-
-                                        style: TextStyle(
-
-                                          fontSize: 11,
-
-                                          fontWeight: FontWeight.bold,
-
-                                          color: Colors.grey,
-
-                                        ),
-
-                                      ),
-
-                                    ),
-
-                                  )
-
-                                : ElevatedButton(
-
-                                    onPressed: () {
-
-                                      final cartItem = CartItem(
-
-                                        id: productId,
-
-                                        name: productName,
-
-                                        price: basePrice,
-
-                                        discountPrice: hasDiscount ? effectivePrice : 0.0,
-
-                                        image: image,
-
-                                        currencySymbol: currencySymbol,
-
-                                      );
-
-                                      _cartManager.addItem(cartItem);
-
-                                      ScaffoldMessenger.of(context).showSnackBar(
-
-                                        const SnackBar(content: Text('Added to cart')),
-
-                                      );
-
-                                    },
-
-                                    style: ElevatedButton.styleFrom(
-
-                                      backgroundColor: Colors.green,
-
-                                      foregroundColor: Colors.white,
-
-                                      elevation: 2,
-
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-
-                                      shape: RoundedRectangleBorder(
-
-                                        borderRadius: BorderRadius.circular(8),
-
-                                      ),
-
-                                    ),
-
-                                    child: const Text(
-
-                                      'Add to Cart',
-
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-
-                                    ),
-
-                                  ),
-
+                        return Container(
+                          height: 32,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-
-                        ),
-
-                      ],
-
+                          child: Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  if (currentQuantity > 1) {
+                                    _cartManager.updateQuantity(productId, currentQuantity - 1);
+                                  } else {
+                                    _cartManager.removeItem(productId);
+                                  }
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.remove, size: 16),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    currentQuantity.toString(),
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  if (currentQuantity < 10) {
+                                    _cartManager.updateQuantity(productId, currentQuantity + 1);
+                                    setState(() {});
+                                  }
+                                },
+                                icon: const Icon(Icons.add, size: 16),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
 
                   ],
