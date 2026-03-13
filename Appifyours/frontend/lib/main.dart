@@ -1,3 +1,7 @@
+import 'screens/element_screen/delivery.dart';
+import 'services/api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 import 'package:flutter/material.dart';
 
@@ -1085,7 +1089,7 @@ class AdminManager {
 
       final response = await http.get(
 
-        Uri.parse('http://192.168.0.9:5000/api/admin/app-info'),
+        Uri.parse('http://192.168.0.5:5000/api/admin/app-info'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -1435,7 +1439,7 @@ class _SignInPageState extends State<SignInPage> {
 
       final response = await http.post(
 
-        Uri.parse('http://192.168.0.9:5000/api/login'),
+        Uri.parse('http://192.168.0.5:5000/api/login'),
 
         headers: {'Content-Type': 'application/json'},
 
@@ -2297,8 +2301,12 @@ class _HomePageState extends State<HomePage> {
 
   // Handle buy now functionality
   void _handleBuyNow() {
-    // Add buy now logic here
-    print('Buy now clicked');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DeliveryCheckoutPage(cartManager: _cartManager),
+      ),
+    );
   }
 
 
