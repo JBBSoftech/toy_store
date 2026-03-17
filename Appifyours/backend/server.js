@@ -73,6 +73,129 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// ===== Compatibility aliases for generated apps (do not remove existing endpoints) =====
+// Some generated app variants call /api/login and /api/signup and expect adminId (string) instead of adminObjectId.
+const resolveAdminObjectId = async (adminIdOrObjectId) => {
+  if (!adminIdOrObjectId) return null;
+  const raw = adminIdOrObjectId.toString();
+  if (mongoose.Types.ObjectId.isValid(raw)) return new mongoose.Types.ObjectId(raw);
+
+  const adminScreen = await AdminElementScreen.findOne({
+    $or: [{ userId: raw }, { adminId: raw }]
+  }).select('_id');
+  return adminScreen?._id || null;
+};
+
+// POST /api/login -> alias of /api/users/sign-in
+router.post('/api/login', async (req, res) => {
+  try {
+    const { email, password, adminId } = req.body;
+    const adminObjectId = await resolveAdminObjectId(adminId);
+    if (!adminObjectId) {
+      return res.status(400).json({ success: false, error: 'Invalid adminId' });
+    }
+
+    const user = await UsersCreateAccount.findOne({
+      email: (email || '').toLowerCase().trim(),
+      adminObjectId: adminObjectId,
+    });
+
+    if (!user || user.password !== password) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        adminObjectId: user.adminObjectId ? user.adminObjectId.toString() : undefined,
+        adminId: user.adminId || undefined,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/signup -> alias of /api/users/create-account
+router.post('/api/signup', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, phone, adminId, shopName } = req.body;
+    const adminObjectId = await resolveAdminObjectId(adminId);
+    if (!adminObjectId) {
+      return res.status(400).json({ success: false, error: 'Invalid adminId' });
+    }
+
+    if (!firstName || !lastName || !email || !password || !phone) {
+      return res.status(400).json({ success: false, error: 'All fields are required' });
+    }
+
+    const existingUser = await UsersCreateAccount.findOne({
+      email: email.toLowerCase().trim(),
+      adminObjectId: adminObjectId,
+    });
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'Email already registered for this app' });
+    }
+
+    const adminScreen = await AdminElementScreen.findById(adminObjectId).select('userId shopName');
+    if (!adminScreen) {
+      return res.status(400).json({ success: false, error: 'Invalid adminId - admin app not found' });
+    }
+
+    const newUser = new UsersCreateAccount({
+      adminObjectId: adminObjectId,
+      adminId: adminScreen.userId,
+      shopName: shopName || adminScreen.shopName || 'Default Shop',
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      phone: phone.toString().trim(),
+      countryCode: '+91'
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign(
+      {
+        userId: newUser._id.toString(),
+        adminObjectId: newUser.adminObjectId ? newUser.adminObjectId.toString() : undefined,
+        adminId: newUser.adminId || undefined,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        _id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        phone: newUser.phone,
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/admin/:adminId/users - Get all users for a given admin (for welcome board / sidebar)
 router.get('/api/admin/:adminId/users', async (req, res) => {
   try {
